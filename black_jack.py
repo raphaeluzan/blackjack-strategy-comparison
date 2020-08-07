@@ -1,3 +1,5 @@
+#        import pdb; pdb.set_trace()
+
 #Use for card shuffle
 import random
 
@@ -8,8 +10,10 @@ chip_pool = 100
 bet = 1
 restart_phrase = "Press 'd' to deal the cards again, or press 'q' to quit"
 
+NUMBER_OF_DECK = 6
+
 #Hearts, Diamonds, Clubs, Spade
-suits = ('Pique-', 'Coeur-', 'Carreau-', 'Trefle-')
+suits = ('H', 'D', 'C', 'S')
 
 #Possible card ranks
 ranking = ('A', '2', '3', '4','5', '6', '7', '8', '9', '10', 'J', 'K')
@@ -65,20 +69,19 @@ class Hand:
         self.value += card_val[card.rank]
         
     def calc_val(self):
-            '''Calculates the value of the hand, makes aces an 11 if they don't bust the hand'''
-            if (self.ace == True and self.value < 12):
-                return self.value + 10
-            return self.value
+        '''Calculates the value of the hand, makes aces an 11 if they don't bust the hand'''
+        if (self.ace == True and self.value < 12):
+            return self.value + 10
+        return self.value
         
     def draw(self, hidden):
-            if hidden == True and playing == True:
-                #Don't show first hidden card
-                starting_card = 1
-            else: 
-                starting_card = 0
-            print("-----------------------------------------------")
-            for x in range(starting_card, len(self.cards)):
-                self.cards[x].draw()
+        if hidden == True and playing == True:
+            #Don't show first hidden card
+            starting_card = 1
+        else: 
+            starting_card = 0
+        for x in range(starting_card, len(self.cards)):
+            self.cards[x].draw()
                 
 #Deck Class
 class Deck: 
@@ -100,8 +103,9 @@ class Deck:
     
     def __str__(self):
         deck_comp = "" 
-        for card in self.cards: 
-            deck_comp += " " + deck_comp.__str__()
+        for i in range(NUMBER_OF_DECK):
+            for card in self.cards: 
+                deck_comp += " " + deck_comp.__str__()
             
         return "The deck has" + deck_comp
     
@@ -146,7 +150,7 @@ def deal_cards():
     
     dealer_hand.card_add(deck.deal())
     dealer_hand.card_add(deck.deal())
-    dealer_hand.draw(hidden=True)
+    
     result = "Hit or Stand? Press either h or s: "
     
     if playing == True:
@@ -190,30 +194,25 @@ def stand():
     #Now go through all the other possible options
     else:
         #Soft 17 rule
-        while dealer_hand.calc_val() > 0:
-            result = "Sorry, you can't stand!"
+        if dealer_hand.calc_val() > 21:
+            result = 'Dealer busts! You win!' + restart_phrase
+            chip_pool += bet
+            playing = False
+            
+        elif dealer_hand.calc_val() < player_hand.calc_val():
+            result = 'You beat the dealer, you win!' + restart_phrase
+            chip_pool += bet
+            playing = False
+            
+        elif dealer_hand.calc_val() == player_hand.calc_val():
+            result = 'Tied up, push!' + restart_phrase
+            playing = False
             
         else:
-            
-            if dealer_hand.calc_val() > 21:
-                result = 'Dealer busts! You win!' + restart_phrase
-                chip_pool += bet
-                playing = False
-                
-            elif dealer_hand.calc_val() < player_hand.calc_val():
-                result = 'You beat the dealer, you win!' + restart_phrase
-                chip_pool += bet
-                playing = False
-                
-            elif dealer_hand.calc_val() == player_hand.calc_val():
-                result = 'Tied up, push!' + restart_phrase
-                playing = False
-                
-            else:
-                result = 'Dealer Wins!' + restart_phrase
-                chip_pool -= bet
-                playing = False
-    
+            result = 'Dealer Wins!' + restart_phrase
+            chip_pool -= bet
+            playing = False
+
     game_step() 
           
         
@@ -221,13 +220,16 @@ def game_step():
     '''Function that prints game status of output'''
     #Displays the player's hand
     print('') 
-    print(('Player Hand is: '), end=' ')
+    print('-- > Player Hand is: \n')
     player_hand.draw(hidden = False)
     
     print(('Player hand total is: ' + str(player_hand.calc_val())))
     
     #Displays the dealer's hand
-    print(('The Dealer Hand is: '), dealer_hand.draw(hidden = True))
+    print(('\n\n--> The Dealer Hand is: \n'))
+    dealer_hand.draw(hidden = True)
+    
+    print(('Dealer hand total is: ' + str(dealer_hand.calc_val())))
     
     #If game round is over
     if playing == False:
